@@ -65,7 +65,8 @@ void DisplayMatrix(float* matrix, int width)
 
 int main() 
 {
-    int width = 4;
+    int width = 16;
+	int tileWidth = 4;	
 
     // Declare host matrices
     float matrixA[width*width];
@@ -73,8 +74,8 @@ int main()
     float resultMatrix[width*width];
 
     // Cuda grid configuration
-    dim3 dimBlock(4,4);
-    dim3 dimGrid((width+15)/16 , (width+15)/16);
+    dim3 dimBlock(tileWidth, tileWidth);
+    dim3 dimGrid(width/tileWidth , width/tileWidth);
 
     // Declare device matrices
     float *matrixAd, *matrixBd, *resultMatrixd;
