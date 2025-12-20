@@ -87,15 +87,15 @@ int main()
     cudaMalloc(&resultMatrixd, matrixSize);
 
     // Initialize matrices using CPU
-    InitializeMatrixCPU(matrixA, width);
-    InitializeMatrixCPU(matrixB, width);
+    // InitializeMatrixCPU(matrixA, width);
+    // InitializeMatrixCPU(matrixB, width);
 
     // Initialize matrices using GPU
-    // InitializeMatrixGPU<<<dimGrid, dimBlock>>>(matrixAd, width);
-    // InitializeMatrixGPU<<<dimGrid, dimBlock>>>(matrixBd, width);
-    // cudaDeviceSynchronize();
-    // cudaMemcpy(matrixA, matrixAd, matrixSize, cudaMemcpyDeviceToHost);
-    // cudaMemcpy(matrixB, matrixBd, matrixSize, cudaMemcpyDeviceToHost);
+    InitializeMatrixGPU<<<dimGrid, dimBlock>>>(matrixAd, width);
+    InitializeMatrixGPU<<<dimGrid, dimBlock>>>(matrixBd, width);
+    cudaDeviceSynchronize();
+    cudaMemcpy(matrixA, matrixAd, matrixSize, cudaMemcpyDeviceToHost);
+    cudaMemcpy(matrixB, matrixBd, matrixSize, cudaMemcpyDeviceToHost);
 
     cudaMemcpy(matrixAd, matrixA, matrixSize, cudaMemcpyHostToDevice);
     cudaMemcpy(matrixBd, matrixB, matrixSize, cudaMemcpyHostToDevice);
