@@ -7,7 +7,7 @@ TARGETS := $(CU_FILES:.cu=)
 all: $(TARGETS)
 
 %: %.cu
-	$(NVCC) $< -o $@
+	$(NVCC) $< -o $@.out
 
 clean:
 	rm -f $(TARGETS)
