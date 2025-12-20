@@ -1,40 +1,36 @@
+#include <cstdio>
+
+#include <iostream>
 #include <stdio.h>
+
+#include <cuda.h>
 #include <cuda_runtime.h>
 
 __global__ void matrixmultiply(float* matrixA, float* matrixB, float* matrixResult, int width)
 {
-    int size = width * width * sizeof(float);
-    float* matrixA_d;
-    float* matrixB_d;
-    float* matrixResult_d;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
 
     float resultValue = 0;
 
-    for (int i = 0; i < width; ++i)
+    if (row < width && col < width)
     {
-        float Melement = matrixA[blockIdx.x * width + threadIdx.x];
-        float Nelement = matrixB[blockIdx.y * width + threadIdx.y];
+        for (int i = 0; i < width; ++i)
+        {
+            float Melement = matrixA[row*width + i];
+            float Nelement = matrixB[i*width + col];
 
-        resultValue += Melement + Nelement;
+            resultValue += Melement * Nelement;
+        }
+
+        matrixResult[row*width + col] = resultValue;
     }
 
-    matrixResult_d[blockIdx.y * width + threadIdx.x] = resultValue;
-
-    cudaMalloc((void**) matrixA_d, size);
-    cudaMalloc((void**) matrixB_d, size);
-    cudaMalloc((void**) matrixResult_d, size);
-
-    cudaMemcpy(matrixA_d, matrixA, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(matrixB_d, matrixB, size, cudaMemcpyHostToDevice);
 }
 
 
 int main() 
 {
-    float* matrixA_p;
-    float* matrixB_p;
-    float* resultMatrix_p;
-
     float matrixA[16] = {
         1, 2, 3, 4,
         5, 6, 7, 8,
@@ -51,14 +47,35 @@ int main()
 
     float resultMatrix[16];
 
-    int width = 32;
+    float *matrixAd, *matrixBd, *resultMatrixd;
+
+    int width = 4;
     int matrixSize = width * width * sizeof(float);
 
-    dim3 dimBlock(width,width);
-    dim3 dimGrid(1,1);
+    dim3 dimBlock(16,16);
+    dim3 dimGrid((width+15)/16 , (width+15)/16);
 
-    matrixmultiply<<<dimGrid, dimBlock>>>();
-    
+    cudaMalloc(&matrixAd, matrixSize);
+    cudaMalloc(&matrixBd, matrixSize);
+    cudaMalloc(&resultMatrixd, matrixSize);
+
+    cudaMemcpy(matrixAd, matrixA, matrixSize, cudaMemcpyHostToDevice);
+    cudaMemcpy(matrixBd, matrixB, matrixSize, cudaMemcpyHostToDevice);
+
+    matrixmultiply<<<dimGrid, dimBlock>>>(matrixAd, matrixBd, resultMatrixd, width);
+
     cudaDeviceSynchronize();
+
+    cudaMemcpy(resultMatrix, resultMatrixd, matrixSize, cudaMemcpyDeviceToHost);
+
+    for (const float element : resultMatrix)
+    {
+        std::cout << element << std::endl;
+    }
+    
+    cudaFree(matrixAd);
+    cudaFree(matrixBd);
+    cudaFree(resultMatrixd);
+
     return 0;
 }
