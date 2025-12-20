@@ -6,7 +6,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-__global__ void matrixmultiply(float* matrixA, float* matrixB, float* matrixResult, int width)
+__global__ void MatrixMultiply(float* matrixA, float* matrixB, float* matrixResult, int width)
 {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -26,6 +26,19 @@ __global__ void matrixmultiply(float* matrixA, float* matrixB, float* matrixResu
         matrixResult[row*width + col] = resultValue;
     }
 
+}
+
+
+void DisplayMatrix(float* matrix, int width)
+{
+    for (std::size_t i = 0; i < width*width; ++i)
+    {
+        std::cout << matrix[i] << " ";
+        if ((i + 1) % width == 0)
+        {
+            std::cout << '\n';
+        }
+    }
 }
 
 
@@ -62,16 +75,13 @@ int main()
     cudaMemcpy(matrixAd, matrixA, matrixSize, cudaMemcpyHostToDevice);
     cudaMemcpy(matrixBd, matrixB, matrixSize, cudaMemcpyHostToDevice);
 
-    matrixmultiply<<<dimGrid, dimBlock>>>(matrixAd, matrixBd, resultMatrixd, width);
+    MatrixMultiply<<<dimGrid, dimBlock>>>(matrixAd, matrixBd, resultMatrixd, width);
 
     cudaDeviceSynchronize();
 
     cudaMemcpy(resultMatrix, resultMatrixd, matrixSize, cudaMemcpyDeviceToHost);
 
-    for (const float element : resultMatrix)
-    {
-        std::cout << element << std::endl;
-    }
+    DisplayMatrix(resultMatrix, width);
     
     cudaFree(matrixAd);
     cudaFree(matrixBd);
